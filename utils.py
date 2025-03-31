@@ -1,6 +1,7 @@
 import torch
 from torch_geometric.data import HeteroData
 
+from sklearn.metrics import accuracy_score, f1_score
 
 
 def _get_node_type_mapping(hom_data, onehot_indices, expected_types):
@@ -149,8 +150,6 @@ def convert_hom_to_het(
     
     return het_data
 
-
-
 # This could be improved by having a function to create metadata=[node_types, edge_types]
 # for the entire dataset and maybe also not have empty tensors if we have metadata.
 # node_types = ["A", "B", "C"]
@@ -165,3 +164,57 @@ def convert_hom_to_het(
 # edge_types = het_dataset[0].edge_types
 # node_types = het_dataset[0].node_types
 # metadata = [node_types, edge_types]
+
+
+def het_predict(model, batch):
+    return model(batch.x_dict, batch.edge_index_dict, batch.batch_dict, len(batch))
+
+def hom_predict(model, batch):
+    return model(batch.x, batch.edge_index, batch.batch)
+
+def train(model, loader, optimizer, criterion, predict, device="cpu"):
+    model.train()
+    total_loss = 0
+    all_preds = []
+    all_labels = []
+
+    for batch in loader:
+        batch.to(device)
+        optimizer.zero_grad()
+        logits = predict(model, batch)
+        loss = criterion(logits, batch.y)
+        
+        preds = logits.argmax(dim=1).detach().cpu()
+        all_preds.extend(preds.numpy())
+        all_labels.extend(batch.y.cpu().numpy())
+        
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item() * batch.y.size(0)
+
+    avg_loss = total_loss / len(loader.dataset)
+    accuracy = accuracy_score(all_labels, all_preds)
+    f1 = f1_score(all_labels, all_preds, average='macro')
+    return avg_loss, accuracy, f1
+
+def test(model, loader, criterion, predict, device="cpu"):
+    model.eval()
+    total_loss = 0
+    all_preds = []
+    all_labels = []
+
+    with torch.no_grad():
+        for batch in loader:
+            batch.to(device)
+            logits = predict(model, batch)
+            loss = criterion(logits, batch.y)
+            
+            preds = logits.argmax(dim=1).cpu()
+            all_preds.extend(preds.numpy())
+            all_labels.extend(batch.y.cpu().numpy())
+            total_loss += loss.item() * batch.y.size(0)
+
+    avg_loss = total_loss / len(loader.dataset)
+    accuracy = accuracy_score(all_labels, all_preds)
+    f1 = f1_score(all_labels, all_preds, average='macro')
+    return avg_loss, accuracy, f1
