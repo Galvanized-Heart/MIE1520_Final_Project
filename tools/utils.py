@@ -1,7 +1,13 @@
+import os
+from datetime import datetime
+
 import torch
 from torch_geometric.data import HeteroData
 
 from sklearn.metrics import accuracy_score, f1_score
+
+import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def _get_node_type_mapping(hom_data, onehot_indices, expected_types):
@@ -188,7 +194,7 @@ def het_predict(model, batch):
 def hom_predict(model, batch):
     return model(batch.x, batch.edge_index, batch.batch)
 
-def train(model, loader, optimizer, criterion, predict, device="cpu"):
+def train(model, loader, optimizer, criterion, predict, scheduler=None, device="cpu"):
     model.train()
     total_loss = 0
     all_preds = []
@@ -206,6 +212,9 @@ def train(model, loader, optimizer, criterion, predict, device="cpu"):
         
         loss.backward()
         optimizer.step()
+        if scheduler is not None:
+            scheduler.step()
+        
         total_loss += loss.item() * batch.y.size(0)
 
     avg_loss = total_loss / len(loader.dataset)
@@ -234,3 +243,78 @@ def test(model, loader, criterion, predict, device="cpu"):
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average='macro')
     return avg_loss, accuracy, f1
+
+def plot_metrics(metrics, experiment_name, results_dir='results'):
+    """Plots and saves training/validation curves for loss, accuracy, and F1 score."""
+    experiment_dir = os.path.join(results_dir, experiment_name)
+    os.makedirs(experiment_dir, exist_ok=True)
+    current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
+
+    # Loss plot
+    plt.figure()
+    plt.plot(metrics['train_loss'], label='Train Loss')
+    plt.plot(metrics['valid_loss'], label='Validation Loss')
+    plt.title('Loss Curve')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    loss_filename = f"{experiment_name}_{current_date}_loss.png"
+    plt.savefig(os.path.join(experiment_dir, loss_filename))
+    plt.show()
+    plt.close()
+
+    # Accuracy plot
+    plt.figure()
+    plt.plot(metrics['train_acc'], label='Train Accuracy')
+    plt.plot(metrics['valid_acc'], label='Validation Accuracy')
+    plt.title('Accuracy Curve')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    acc_filename = f"{experiment_name}_{current_date}_accuracy.png"
+    plt.savefig(os.path.join(experiment_dir, acc_filename))
+    plt.show()
+    plt.close()
+
+    # F1 score plot
+    plt.figure()
+    plt.plot(metrics['train_f1'], label='Train F1')
+    plt.plot(metrics['valid_f1'], label='Validation F1')
+    plt.title('F1 Score Curve')
+    plt.xlabel('Epoch')
+    plt.ylabel('F1 Score')
+    plt.legend()
+    f1_filename = f"{experiment_name}_{current_date}_f1.png"
+    plt.savefig(os.path.join(experiment_dir, f1_filename))
+    plt.show()
+    plt.close()
+
+def create_metrics_table(metrics, experiment_name, results_dir='results'):
+    """Creates and saves a CSV of metrics, returns styled DataFrame for display."""
+    experiment_dir = os.path.join(results_dir, experiment_name)
+    os.makedirs(experiment_dir, exist_ok=True)    
+    current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
+
+    df = pd.DataFrame({
+        'Epoch': range(1, len(metrics['train_loss']) + 1),
+        'Train Loss': metrics['train_loss'],
+        'Valid Loss': metrics['valid_loss'],
+        'Train Acc': metrics['train_acc'],
+        'Valid Acc': metrics['valid_acc'],
+        'Train F1': metrics['train_f1'],
+        'Valid F1': metrics['valid_f1']
+    })
+
+    # Save CSV
+    csv_filename = f"{experiment_name}_{current_date}_metrics.csv"
+    csv_path = os.path.join(experiment_dir, csv_filename)
+    df.to_csv(csv_path, index=False)
+
+    return df.style.format({
+        'Train Loss': '{:.4f}',
+        'Valid Loss': '{:.4f}',
+        'Train Acc': '{:.4f}',
+        'Valid Acc': '{:.4f}',
+        'Train F1': '{:.4f}',
+        'Valid F1': '{:.4f}'
+    }).background_gradient(cmap='Blues')
