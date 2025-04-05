@@ -31,11 +31,12 @@ class HeteroGNN_GraphConv(torch.nn.Module):
             self,
             metadata, 
             hidden_channels,
+            num_classes,
             mlp_layers=2,
             conv_layers=2,
             act=F.relu,
-            intra_aggr='sum',
-            inter_aggr='mean',
+            intra_aggr='mean',
+            inter_aggr='sum',
             dropout=0.5
         ):
 
@@ -53,7 +54,7 @@ class HeteroGNN_GraphConv(torch.nn.Module):
             post_lin = ModuleDict({nt: MLP(-1, hidden_channels, hidden_channels, mlp_layers, dropout=dropout, act=act) for nt in node_types})
             self.conv_blocks.append(ModuleDict({'conv': hetero_conv, 'post_lin': post_lin}))
 
-        self.classifier = Linear(len(node_types) * hidden_channels, hidden_channels)
+        self.classifier = Linear(len(node_types) * hidden_channels, num_classes)
         self.act = act
         self.dropout = Dropout(dropout)
         
@@ -78,6 +79,7 @@ class HeteroGNN_SAGEConv(torch.nn.Module):
             self,
             metadata, 
             hidden_channels,
+            num_classes,
             mlp_layers=2,
             conv_layers=2,
             act=F.relu,
@@ -100,7 +102,7 @@ class HeteroGNN_SAGEConv(torch.nn.Module):
             post_lin = ModuleDict({nt: MLP(-1, hidden_channels, hidden_channels, mlp_layers, dropout=dropout, act=act) for nt in node_types})
             self.conv_blocks.append(ModuleDict({'conv': hetero_conv, 'post_lin': post_lin}))
 
-        self.classifier = Linear(len(node_types) * hidden_channels, hidden_channels)
+        self.classifier = Linear(len(node_types) * hidden_channels, num_classes)
         self.act = act
         self.dropout = Dropout(dropout)
         
@@ -125,6 +127,7 @@ class HeteroGNN_GATConv(torch.nn.Module):
             self,
             metadata, 
             hidden_channels,
+            num_classes,
             mlp_layers=2,
             conv_layers=2,
             act=F.relu,
@@ -142,12 +145,12 @@ class HeteroGNN_GATConv(torch.nn.Module):
 
         self.conv_blocks = ModuleList()
         for _ in range(conv_layers):
-            conv_dict = {et: GATConv((-1, -1), hidden_channels, aggr=intra_aggr) for et in edge_types}
+            conv_dict = {et: GATConv((-1, -1), hidden_channels, aggr=intra_aggr, add_self_loops=False) for et in edge_types}
             hetero_conv = HeteroConv(conv_dict, aggr=inter_aggr)
             post_lin = ModuleDict({nt: MLP(-1, hidden_channels, hidden_channels, mlp_layers, dropout=dropout, act=act) for nt in node_types})
             self.conv_blocks.append(ModuleDict({'conv': hetero_conv, 'post_lin': post_lin}))
 
-        self.classifier = Linear(len(node_types) * hidden_channels, hidden_channels)
+        self.classifier = Linear(len(node_types) * hidden_channels, num_classes)
         self.act = act
         self.dropout = Dropout(dropout)
         
