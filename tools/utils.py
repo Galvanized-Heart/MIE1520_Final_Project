@@ -1,13 +1,15 @@
 import os
 from datetime import datetime
+import random
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 import torch
 from torch_geometric.data import HeteroData
+from torch_geometric.loader import DataLoader
 
 from sklearn.metrics import accuracy_score, f1_score
-
-import matplotlib.pyplot as plt
-import pandas as pd
 
 
 def _get_node_type_mapping(hom_data, onehot_indices, expected_types):
@@ -318,3 +320,22 @@ def create_metrics_table(metrics, experiment_name, results_dir='results'):
         'Train F1': '{:.4f}',
         'Valid F1': '{:.4f}'
     }).background_gradient(cmap='Blues')
+
+
+
+def reset_seeds(seed, device):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if device.type == 'cuda':
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+def get_train_loader(seed, train_set, batch_size):
+    generator = torch.Generator().manual_seed(seed)
+    return DataLoader(
+        train_set,
+        batch_size=batch_size,
+        shuffle=True,
+        generator=generator
+    )
