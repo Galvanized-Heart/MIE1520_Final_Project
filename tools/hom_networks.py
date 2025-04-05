@@ -18,16 +18,20 @@ class HomoCONV(torch.nn.Module):
         super().__init__()
         
         self.convs = torch.nn.ModuleList()
+        self.layer_norms = torch.nn.ModuleList()
+        
         for _ in range(num_layers):
             self.convs.append(GraphConv((-1, -1), hidden_channels, aggr=aggr))
+            self.layer_norms.append(torch.nn.LayerNorm(hidden_channels))
 
         self.classifier = Linear(hidden_channels, out_channels)
         self.act = act
         self.feat_dropout = torch.nn.Dropout(feat_dropout)
 
     def forward(self, x, edge_index, batch):
-        for conv in self.convs:
+        for i, conv in enumerate(self.convs):
             x = conv(x, edge_index)
+            x = self.layer_norms[i](x)
             x = self.act(x)
             x = self.feat_dropout(x)
         

@@ -97,7 +97,7 @@ class HeteroGNN_SAGEConv(torch.nn.Module):
 
         self.conv_blocks = ModuleList()
         for _ in range(conv_layers):
-            conv_dict = {et: GATConv((-1, -1), hidden_channels, aggr=intra_aggr) for et in edge_types}
+            conv_dict = {et: SAGEConv((-1, -1), hidden_channels, aggr=intra_aggr) for et in edge_types}
             hetero_conv = HeteroConv(conv_dict, aggr=inter_aggr)
             post_lin = ModuleDict({nt: MLP(-1, hidden_channels, hidden_channels, mlp_layers, dropout=dropout, act=act) for nt in node_types})
             self.conv_blocks.append(ModuleDict({'conv': hetero_conv, 'post_lin': post_lin}))
@@ -145,7 +145,7 @@ class HeteroGNN_GATConv(torch.nn.Module):
 
         self.conv_blocks = ModuleList()
         for _ in range(conv_layers):
-            conv_dict = {et: SAGEConv((-1, -1), hidden_channels, aggr=intra_aggr) for et in edge_types}
+            conv_dict = {et: GATConv((-1, -1), hidden_channels, aggr=intra_aggr) for et in edge_types}
             hetero_conv = HeteroConv(conv_dict, aggr=inter_aggr)
             post_lin = ModuleDict({nt: MLP(-1, hidden_channels, hidden_channels, mlp_layers, dropout=dropout, act=act) for nt in node_types})
             self.conv_blocks.append(ModuleDict({'conv': hetero_conv, 'post_lin': post_lin}))

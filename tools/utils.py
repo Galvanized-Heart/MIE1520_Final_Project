@@ -246,9 +246,9 @@ def test(model, loader, criterion, predict, device="cpu"):
 
 def plot_metrics(metrics, experiment_name, results_dir='results'):
     """Plots and saves training/validation curves for loss, accuracy, and F1 score."""
-    experiment_dir = os.path.join(results_dir, experiment_name)
-    os.makedirs(experiment_dir, exist_ok=True)
     current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
+    experiment_dir = os.path.join(results_dir, experiment_name, current_date)
+    os.makedirs(experiment_dir, exist_ok=True)
 
     # Loss plot
     plt.figure()
@@ -291,9 +291,9 @@ def plot_metrics(metrics, experiment_name, results_dir='results'):
 
 def create_metrics_table(metrics, experiment_name, results_dir='results'):
     """Creates and saves a CSV of metrics, returns styled DataFrame for display."""
-    experiment_dir = os.path.join(results_dir, experiment_name)
-    os.makedirs(experiment_dir, exist_ok=True)    
     current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
+    experiment_dir = os.path.join(results_dir, experiment_name, current_date)
+    os.makedirs(experiment_dir, exist_ok=True)    
 
     df = pd.DataFrame({
         'Epoch': range(1, len(metrics['train_loss']) + 1),
