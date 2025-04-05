@@ -11,7 +11,7 @@ from torch_geometric.loader import DataLoader
 
 from sklearn.metrics import accuracy_score, f1_score
 
-
+# Hom to Het data conversion utils
 def _get_node_type_mapping(hom_data, onehot_indices, expected_types):
     """
     Identify node types using one-hot columns and map them to string labels.
@@ -41,8 +41,6 @@ def _get_node_type_mapping(hom_data, onehot_indices, expected_types):
     
     return type_dict
 
-
-
 def _create_mapping_dict(type_dict):
     """
     Create ID mapping dictionaries for all node types.
@@ -51,8 +49,6 @@ def _create_mapping_dict(type_dict):
     """
     return {t: {orig_idx: new_idx for new_idx, orig_idx in enumerate(nodes)}
             for t, nodes in type_dict.items()}
-
-
 
 def _filter_and_remap_edges(edge_index, src_type_nodes, dst_type_nodes, 
                            src_map, dst_map, enforce_canonical):
@@ -94,8 +90,6 @@ def _filter_and_remap_edges(edge_index, src_type_nodes, dst_type_nodes,
         edge_index = torch.unique(reordered, dim=1)
     
     return edge_index
-
-
 
 def convert_hom_to_het(
         hom_data, 
@@ -190,6 +184,7 @@ def convert_hom_to_het(
 # metadata = [node_types, edge_types]
 
 
+# Training/Testing utils
 def het_predict(model, batch):
     return model(batch.x_dict, batch.edge_index_dict, batch.batch_dict, len(batch))
 
@@ -246,6 +241,8 @@ def test(model, loader, criterion, predict, device="cpu"):
     f1 = f1_score(all_labels, all_preds, average='macro')
     return avg_loss, accuracy, f1
 
+
+# Metrics utils
 def plot_metrics(metrics, experiment_name, results_dir='results'):
     """Plots and saves training/validation curves for loss, accuracy, and F1 score."""
     current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
@@ -322,7 +319,7 @@ def create_metrics_table(metrics, experiment_name, results_dir='results'):
     }).background_gradient(cmap='Blues')
 
 
-
+# Reproducibility utils
 def reset_seeds(seed, device):
     random.seed(seed)
     np.random.seed(seed)
