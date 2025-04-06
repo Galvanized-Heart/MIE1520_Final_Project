@@ -28,7 +28,7 @@ class HomoGNN_GraphConv(torch.nn.Module):
 
         self.classifier = Linear(hidden_channels, num_classes)
         self.act = act
-        self.feat_dropout = torch.nn.Dropout(dropout)
+        self.dropout = torch.nn.Dropout(dropout)
 
     def forward(self, x, edge_index, batch):
 
@@ -38,7 +38,7 @@ class HomoGNN_GraphConv(torch.nn.Module):
             x = conv['conv'](x, edge_index)
             x = conv['post_lin'](x)
             x = self.act(x)
-            x = self.feat_dropout(x)
+            x = self.dropout(x)
         
         pooled = global_mean_pool(x, batch)
         out = self.classifier(pooled)
@@ -68,7 +68,7 @@ class HomoGNN_SAGEConv(torch.nn.Module):
 
         self.classifier = Linear(hidden_channels, num_classes)
         self.act = act
-        self.feat_dropout = torch.nn.Dropout(dropout)
+        self.dropout = torch.nn.Dropout(dropout)
 
     def forward(self, x, edge_index, batch):
 
@@ -78,7 +78,7 @@ class HomoGNN_SAGEConv(torch.nn.Module):
             x = conv['conv'](x, edge_index)
             x = conv['post_lin'](x)
             x = self.act(x)
-            x = self.feat_dropout(x)
+            x = self.dropout(x)
         
         pooled = global_mean_pool(x, batch)
         out = self.classifier(pooled)
@@ -107,7 +107,7 @@ class HomoGNN_GATConv(torch.nn.Module):
 
         self.classifier = Linear(hidden_channels, num_classes)
         self.act = act
-        self.feat_dropout = torch.nn.Dropout(dropout)
+        self.dropout = torch.nn.Dropout(dropout)
 
     def forward(self, x, edge_index, batch):
 
@@ -117,7 +117,7 @@ class HomoGNN_GATConv(torch.nn.Module):
             x = conv['conv'](x, edge_index)
             x = conv['post_lin'](x)
             x = self.act(x)
-            x = self.feat_dropout(x)
+            x = self.dropout(x)
         
         pooled = global_mean_pool(x, batch)
         out = self.classifier(pooled)
