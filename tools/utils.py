@@ -288,6 +288,54 @@ def plot_metrics(metrics, experiment_name, results_dir='results'):
     plt.show()
     plt.close()
 
+def plot_metrics_w_test(metrics, experiment_name, results_dir='results'):
+    """Plots and saves training/validation/test curves for loss, accuracy, and F1 score."""
+    current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
+    experiment_dir = os.path.join(results_dir, experiment_name, current_date)
+    os.makedirs(experiment_dir, exist_ok=True)
+
+    # Loss plot
+    plt.figure()
+    plt.plot(metrics['train_loss'], label='Train Loss')
+    plt.plot(metrics['valid_loss'], label='Validation Loss')
+    plt.plot(metrics['test_loss'], label='Test Loss')
+    plt.title('Loss Curve')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    loss_filename = f"{experiment_name}_{current_date}_loss.png"
+    plt.savefig(os.path.join(experiment_dir, loss_filename))
+    plt.show()
+    plt.close()
+
+    # Accuracy plot
+    plt.figure()
+    plt.plot(metrics['train_acc'], label='Train Accuracy')
+    plt.plot(metrics['valid_acc'], label='Validation Accuracy')
+    plt.plot(metrics['test_acc'], label='Test Accuracy')
+    plt.title('Accuracy Curve')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    acc_filename = f"{experiment_name}_{current_date}_accuracy.png"
+    plt.savefig(os.path.join(experiment_dir, acc_filename))
+    plt.show()
+    plt.close()
+
+    # F1 score plot
+    plt.figure()
+    plt.plot(metrics['train_f1'], label='Train F1')
+    plt.plot(metrics['valid_f1'], label='Validation F1')
+    plt.plot(metrics['test_f1'], label='Test F1')
+    plt.title('F1 Score Curve')
+    plt.xlabel('Epoch')
+    plt.ylabel('F1 Score')
+    plt.legend()
+    f1_filename = f"{experiment_name}_{current_date}_f1.png"
+    plt.savefig(os.path.join(experiment_dir, f1_filename))
+    plt.show()
+    plt.close()
+
 def create_metrics_table(metrics, experiment_name, results_dir='results'):
     """Creates and saves a CSV of metrics, returns styled DataFrame for display."""
     current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
@@ -316,6 +364,42 @@ def create_metrics_table(metrics, experiment_name, results_dir='results'):
         'Valid Acc': '{:.4f}',
         'Train F1': '{:.4f}',
         'Valid F1': '{:.4f}'
+    }).background_gradient(cmap='Blues')
+
+def create_metrics_table_w_test(metrics, experiment_name, results_dir='results'):
+    """Creates and saves a CSV of metrics (including test metrics), returns styled DataFrame for display."""
+    current_date = datetime.now().strftime("%Y-%m-%d-%H:%M")
+    experiment_dir = os.path.join(results_dir, experiment_name, current_date)
+    os.makedirs(experiment_dir, exist_ok=True)    
+
+    df = pd.DataFrame({
+        'Epoch': range(1, len(metrics['train_loss']) + 1),
+        'Train Loss': metrics['train_loss'],
+        'Valid Loss': metrics['valid_loss'],
+        'Test Loss': metrics['test_loss'],
+        'Train Acc': metrics['train_acc'],
+        'Valid Acc': metrics['valid_acc'],
+        'Test Acc': metrics['test_acc'],
+        'Train F1': metrics['train_f1'],
+        'Valid F1': metrics['valid_f1'],
+        'Test F1': metrics['test_f1']
+    })
+
+    # Save CSV
+    csv_filename = f"{experiment_name}_{current_date}_metrics.csv"
+    csv_path = os.path.join(experiment_dir, csv_filename)
+    df.to_csv(csv_path, index=False)
+
+    return df.style.format({
+        'Train Loss': '{:.4f}',
+        'Valid Loss': '{:.4f}',
+        'Test Loss': '{:.4f}',
+        'Train Acc': '{:.4f}',
+        'Valid Acc': '{:.4f}',
+        'Test Acc': '{:.4f}',
+        'Train F1': '{:.4f}',
+        'Valid F1': '{:.4f}',
+        'Test F1': '{:.4f}'
     }).background_gradient(cmap='Blues')
 
 
