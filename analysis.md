@@ -1,20 +1,14 @@
 # Template Experiment:
 ### Heterogeneous GNN:
 #### Tests
-- Train metrics: loss , Acc , F1 
-- Valid metrics: loss , Acc , F1 
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 
 - Comments: 
 ### Homogeneous GNN:
 #### Tests
-- Train metrics: loss , Acc , F1 
-- Valid metrics: loss , Acc , F1 
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 
 - Comments: 
-
-Remaining Experiments:
-- Width
-- Depth
-- Aggr
-- Residual connections
 
 <br><br>
 
@@ -245,14 +239,143 @@ maxlr = 3e-4
 # Experiment 5: Adding skip connections and varying depth
 - Let's keep dropout at 0.5 for now to keep things still relatively comparable and we can move to 0.25 for homoGNN if things change.
 ### Heterogeneous GNN:
-#### Tests
+#### 1 Layer, No Skip Connections
+- Train metrics: loss 1.5664, Acc 0.3738, F1 0.3438
+- Valid metrics: loss 1.6831, Acc 0.2444, F1 0.1977
+- Comments: Overfitting
+#### 1 Layer, Skip Connections
+- Train metrics: loss 1.5634, Acc 0.3476, F1 0.3176
+- Valid metrics: loss 1.6800, Acc 0.2556, F1 0.1796
+- Comments: Overfitting but slightly better?
+#### 2 Layer, No Skip Connections
+- Train metrics: loss 1.5803, Acc 0.3167, F1 0.2810
+- Valid metrics: loss 1.6973, Acc 0.2444, F1 0.1951
+- Comments: Overfitting but better than 1 layer
+#### 2 Layer, Skip Connections
+- Train metrics: loss 1.5804, Acc 0.3429, F1 0.3177
+- Valid metrics: loss 1.6808, Acc 0.2667, F1 0.1953
+- Comments: Overfitting, but for some reason when I was testing it out, it did wayyy better (see results/ENZYMES-HeteroGNN_GraphConv-128 hidden channels-2 mlp-2 conv-sum intra_aggr-mean inter_aggr-0.5 dropout-use skip True-0.0001 lr-0.0003 maxlr-0.0001 decay-OneCylceLR-Adam-CE Loss/2025-04-06-21:46 (but this used sum for intra_aggr and mean for inter_aggr that's the only difference)). It got Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1 -> 1.5352	1.6804	0.3619	0.3333	0.3428	0.3136. Which is our new well fit best model!
+#### 3 Layer, No Skip Connections
+- Train metrics: loss 1.7510, Acc 0.2000, F1 0.1270
+- Valid metrics: loss 1.7702, Acc 0.1889, F1 0.0994
+- Comments: Struggling to learn generalizable info
+#### 3 Layer, Skip Connections (epoch 21)
+- Train metrics: loss 1.7251, Acc 0.3048, F1 0.3070
+- Valid metrics: loss 1.7465, Acc 0.2889, F1 0.2499
+- Comments: Maybe some mild overfitting, but it's doing pretty well.
+### Homogeneous GNN:
+#### 1 Layer, No Skip Connections
+- Train metrics: loss 1.7537, Acc 0.2762, F1 0.2725
+- Valid metrics: loss 1.7708, Acc 0.2556, F1 0.2207
+- Comments: Doing fairly well for training, but not as good as our best HomoGNN so far
+#### 1 Layer, Skip Connections
+- Train metrics: loss 1.7629, Acc 0.2643, F1 0.2500
+- Valid metrics: loss 1.7785, Acc 0.1778, F1 0.1295
+- Comments: Really overfit. This is kinda surprising since I though skip connections were meant to partially address overfitting
+#### 2 Layer, No Skip Connections
+- Train metrics: loss 1.7057, Acc 0.2619, F1 0.2327
+- Valid metrics: loss 1.7429, Acc 0.3000, F1 0.2435
+- Comments: Not overfitting anymore. Doing pretty well. (Underfitting on Acc and slightly on F1?)
+#### 2 Layer, Skip Connections
+- Train metrics: loss 1.7495, Acc 0.2667, F1 0.2611
+- Valid metrics: loss 1.7656, Acc 0.2778, F1 0.1713
+- Comments: Surprisingly worse than without skip connections...
+#### 3 Layer, No Skip Connections
 - Train metrics: loss , Acc , F1 
 - Valid metrics: loss , Acc , F1 
+- Comments: Unable to learn generalizable info
+#### 3 Layer, Skip Connections (epoch 25)
+- Train metrics: loss 1.7806, Acc 0.2333, F1 0.2374
+- Valid metrics: loss 1.7880, Acc 0.2333, F1 0.1204
+- Comments: Kinda struggles to learn (?). There are points where it's learning 'generalizable info' but it will crash back down after an epoch to two
+## Analysis:
+- It seems as though 2 layers is doing pretty well for this work
+- Skip connections generally are effective for HeteroGNNs, but not for HomoGNNs. For HomoGNNs, the lack of skip connections performed better, which is odd since I thought residual connections were supposed to help reduce overfitting.
+
+<br><br>
+
+# Experiment 6: Varying width
+- Kept residual connections for HeteroGNNs but not HomoGNNs
+### Heterogeneous GNN:
+#### 32 hidden_channels (epoch 28)
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.7433	1.7626	0.2690	0.2000	0.2690	0.1749
+- Comments: Slightly overfitting, but doing pretty well for a small model. It does struggle learn generalizable concepts it seems 
+#### 64 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.6858	1.7547	0.2952	0.2222	0.2696	0.1629
+- Comments: Overfits in this instance by a fair bit
+#### 128 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.5802	1.6807	0.3405	0.2667	0.3160	0.1953
+- Comments: Also overfits by a fair bit 
+#### 256 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.3519	1.5997	0.4690	0.3333	0.4528	0.3076
+- Comments: Still some large overfitting, but the model seems to be doing well at getting higher validation accuracy and F1, which is nice to see
+#### 512 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.1558	1.5232	0.5881	0.3889	0.5858	0.3865
+- Comments: Though the models are overfitting here, these are the best validation acc and F1s we've seen so far, which seems kinda promising considering we can save most of these gains with more attuned hyperparameters
+### Homogeneous GNN: (no skip)
+#### 32 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- Comments:  Unable to learn generalizable info
+#### 64 hidden_channels (epoch 25)
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.7831	1.7907	0.1929	0.1889	0.1359	0.0887
+- Comments: Seems like the model at this size is performing relatively poorly and overfits still 
+#### 128 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.7056	1.7433	0.2595	0.3111	0.2307	0.2458
+- Comments: This is kinda what we've already seen. Our model hyperparams (lr, decay, etc) are built for this size
+#### 256 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.6927	1.7111	0.2357	0.2111	0.1682	0.1493
+- Comments: This is interesting. The model appears to perform exceptionally worse than 128 hidden_channels for some reason
+#### 512 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.6221	1.6941	0.2929	0.2333	0.2576	0.1945
+- Comments: The model is beginning to overfit a bit here, but I believe better hyperparams would help with that
+### Homogeneous GNN: (skip)
+#### 32 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- Comments:  Unable to learn generalizable info
+#### 64 hidden_channels (epoch 25)
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.7781	1.7859	0.2357	0.2222	0.2225	0.1362
+- Comments: Seems like the model at this size is performing better than w/o skips and overfits F1 still, but not Acc
+#### 128 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.7497	1.7656	0.2690	0.2778	0.2638	0.1713
+- Comments: This is moderately worse than what we saw w/o skips...
+#### 256 hidden_channels
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.6786	1.7397	0.3095	0.3000	0.2883	0.2649
+- Comments: The training dynamics look good on this one and it doesn't appear to be overfitting. It's slightly behind the HeteroGNN at this size, but the HeteroGNN is overfit
+#### 512 hidden_channels (epoch 27)
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 1.5280	1.6497	0.3810	0.3000	0.3562	0.2837
+- Comments: the model is overfitting and didn't seem much gains on 256 w/ skip. I does do much better than 512 w/o skip which is nice, but it doesn't do better than 512 for HeteroGNN w/ skip.
+## Analysis:
+- Overall, HeteroGNN seems to be doing better than HomoGNN even though HeteroGNN is overfitting.
+- Skip connections seems to stabilize training performance and results in better performance than without skips in HomoGNNs.
+- HeteroGNN seems to train quite stably, but HomoGNN appears to lose training stability at 512 even with skips.
+- Overfitting increases with model size, but validation gains in HeteroGNNs imply better inherent task alignment.
+
+<br><br>
+
+# Experiment 7: Varying aggregation methods
+- We'll move forward with 256 hidden channels for both HeteroGNN and HomoGNN to ensure both still can maintain stability and we'll investigate different aggregation methods (and combinations).
+### Heterogeneous GNN:
+#### Tests
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 
 - Comments: 
 ### Homogeneous GNN:
 #### Tests
-- Train metrics: loss , Acc , F1 
-- Valid metrics: loss , Acc , F1 
+- Train Loss	Valid Loss	Train Acc	Valid Acc	Train F1	Valid F1
+- 
 - Comments: 
 
 <br><br>
