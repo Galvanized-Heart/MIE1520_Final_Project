@@ -37,7 +37,8 @@ class HeteroGNN_GraphConv(torch.nn.Module):
             act=F.relu,
             intra_aggr='mean',
             inter_aggr='sum',
-            dropout=0.5
+            dropout=0.5,
+            use_skip_connections=False
         ):
 
         super().__init__()
@@ -57,14 +58,20 @@ class HeteroGNN_GraphConv(torch.nn.Module):
         self.classifier = Linear(len(node_types) * hidden_channels, num_classes)
         self.act = act
         self.dropout = Dropout(dropout)
+        self.use_skip_connections = use_skip_connections
         
     def forward(self, x_dict, edge_index_dict, batch_dict, batch_size):
 
         x_dict = {nt: self.node_emb_layers[nt](x) for nt, x in x_dict.items()}
 
         for block in self.conv_blocks:
+            residual_dict = x_dict
             x_dict = block['conv'](x_dict, edge_index_dict)
-            x_dict = {nt: self.dropout(self.act(block['post_lin'][nt](x))) for nt, x in x_dict.items()}
+            x_dict = {nt: block['post_lin'][nt](x_dict[nt]) for nt in x_dict}
+            if self.use_skip_connections:
+                x_dict = {nt: x + residual_dict[nt] for nt, x in x_dict.items()}
+            x_dict = {nt: self.act(x) for nt, x in x_dict.items()}
+            x_dict = {nt: self.dropout(x) for nt, x in x_dict.items()}
 
         pooled_list = [global_mean_pool(x, batch_dict[node_type], size=batch_size) for node_type, x in x_dict.items()]
 
