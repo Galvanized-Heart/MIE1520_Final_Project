@@ -16,12 +16,12 @@ Clone the repository and install the dependencies:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/protein-gnns.git
-cd protein-gnns
+git clone https://github.com/Galvanized-Heart/MIE1520_Final_Project.git
+cd MIE1520_Final_Project
 
 # Create a virtual environment (optional but recommended)
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -121,7 +121,7 @@ from tools.utils import convert_hom_to_het
 hetero_graph = convert_hom_to_het(
     hom_data=homogeneous_graph,
     onehot_indices=[0, 1, 2],  # Indices of one-hot encoded node type features
-    expected_node_types=["amino", "ligand", "metal"],  # Your node types
+    expected_node_types=["hydrophobic", "hydrophilic", "charged"],  # Your node types
     expected_edge_types=['edge_index'],  # Edge types in your data
     is_directed=True
 )
@@ -134,7 +134,7 @@ hetero_graph = convert_hom_to_het(
 You can create your own experiments by:
 
 1. **Building custom datasets**:
-   - Adapt the `ProteinPairGraphBuilder` for your protein data
+   - Adapt the `ProteinPairGraphBuilder` for your PDB data
    - Or create your own graph builders for different molecular representations
 
 2. **Implementing new GNN architectures**:
@@ -163,11 +163,11 @@ def create_custom_hetero_graph(data):
     het_data = HeteroData()
     
     # Add node features for each type
-    het_data['protein'].x = protein_features
-    het_data['ligand'].x = ligand_features
+    het_data['hydrophobic'].x = hydrophobic_features
+    het_data['hydrophilic'].x = hydrophilic_features
     
     # Add edge connections
-    het_data['protein', 'binds', 'ligand'].edge_index = protein_ligand_edges
+    het_data['hydrophobic', 'connects', 'hydrophilic'].edge_index = hydrophobic_hydrophilic_edges
     
     return het_data
 ```
