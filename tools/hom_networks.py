@@ -58,7 +58,8 @@ class HomoGNN_SAGEConv(torch.nn.Module):
                  conv_layers=2,
                  act=F.relu,
                  aggr='mean',
-                 dropout=0.5
+                 dropout=0.5,
+                use_skip_connections=False
         ):
         
         super().__init__()
@@ -74,14 +75,18 @@ class HomoGNN_SAGEConv(torch.nn.Module):
         self.classifier = Linear(hidden_channels, num_classes)
         self.act = act
         self.dropout = torch.nn.Dropout(dropout)
+        self.use_skip_connections = use_skip_connections
 
     def forward(self, x, edge_index, batch):
 
         x = self.node_emb_layers[0](x)
 
         for conv in self.conv_blocks:
+            residual = x
             x = conv['conv'](x, edge_index)
             x = conv['post_lin'](x)
+            if self.use_skip_connections:
+                x = x + residual
             x = self.act(x)
             x = self.dropout(x)
         
@@ -97,7 +102,8 @@ class HomoGNN_GATConv(torch.nn.Module):
                  conv_layers=2,
                  act=F.relu,
                  aggr='mean',
-                 dropout=0.5
+                 dropout=0.5,
+                use_skip_connections=False
         ):
         
         super().__init__()
@@ -113,14 +119,18 @@ class HomoGNN_GATConv(torch.nn.Module):
         self.classifier = Linear(hidden_channels, num_classes)
         self.act = act
         self.dropout = torch.nn.Dropout(dropout)
+        self.use_skip_connections = use_skip_connections
 
     def forward(self, x, edge_index, batch):
 
         x = self.node_emb_layers[0](x)
 
         for conv in self.conv_blocks:
+            residual = x
             x = conv['conv'](x, edge_index)
             x = conv['post_lin'](x)
+            if self.use_skip_connections:
+                x = x + residual
             x = self.act(x)
             x = self.dropout(x)
         
